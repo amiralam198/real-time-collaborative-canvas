@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collaborative Drawing Canvas</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Connection Status -->
+  <div id="connection-status" class="status-bar">
+    <div class="status-indicator" id="status-indicator"></div>
+    <span id="status-text">Connecting...</span>
+    <span id="latency" class="latency"></span>
+  </div>
+
+  <!-- Main Container -->
+  <div class="container">
+    
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="toolbar-section">
+        <h3>Tools</h3>
+        <div class="tool-buttons">
+          <button id="tool-brush" class="tool-btn active" title="Brush (B)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+              <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+            </svg>
+          </button>
+          <button id="tool-eraser" class="tool-btn" title="Eraser (E)">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M7 21h10"/>
+              <path d="M5 11l9-9 4 4-9 9z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="toolbar-section">
+        <h3>Color</h3>
+        <div class="color-picker-container">
+          <input type="color" id="color-picker" value="#000000" title="Pick Color">
+          <div class="preset-colors">
+            <button class="color-preset" data-color="#000000" style="background: #000000" title="Black"></button>
+            <button class="color-preset" data-color="#FF0000" style="background: #FF0000" title="Red"></button>
+            <button class="color-preset" data-color="#00FF00" style="background: #00FF00" title="Green"></button>
+            <button class="color-preset" data-color="#0000FF" style="background: #0000FF" title="Blue"></button>
+            <button class="color-preset" data-color="#FFFF00" style="background: #FFFF00" title="Yellow"></button>
+            <button class="color-preset" data-color="#FF00FF" style="background: #FF00FF" title="Magenta"></button>
+            <button class="color-preset" data-color="#00FFFF" style="background: #00FFFF" title="Cyan"></button>
+            <button class="color-preset" data-color="#FFFFFF" style="background: #FFFFFF; border: 1px solid #ccc" title="White"></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="toolbar-section">
+        <h3>Brush Size</h3>
+        <div class="slider-container">
+          <input type="range" id="brush-size" min="1" max="50" value="3" class="slider">
+          <span id="brush-size-value" class="slider-value">3px</span>
+        </div>
+        <div class="brush-preview">
+          <div id="brush-preview-dot"></div>
+        </div>
+      </div>
+
+      <div class="toolbar-section">
+        <h3>Actions</h3>
+        <div class="action-buttons">
+          <button id="undo-btn" class="action-btn" title="Undo (Ctrl+Z)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 7v6h6"/>
+              <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/>
+            </svg>
+            Undo
+          </button>
+          <button id="redo-btn" class="action-btn" title="Redo (Ctrl+Y)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 7v6h-6"/>
+              <path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"/>
+            </svg>
+            Redo
+          </button>
+          <button id="clear-btn" class="action-btn danger" title="Clear Canvas">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+            </svg>
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <div class="toolbar-section">
+        <h3>Performance</h3>
+        <div class="stats">
+          <div class="stat-item">
+            <span class="stat-label">FPS:</span>
+            <span id="fps-counter" class="stat-value">60</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Operations:</span>
+            <span id="ops-counter" class="stat-value">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Canvas Container -->
+    <div class="canvas-container">
+      <canvas id="canvas"></canvas>
+      <div id="cursors-layer"></div>
+    </div>
+
+    <!-- Users Panel -->
+    <div class="users-panel">
+      <h3>Online Users (<span id="user-count">0</span>)</h3>
+      <div id="users-list" class="users-list"></div>
+      
+      <div class="room-info">
+        <h3>Room Info</h3>
+        <div class="info-item">
+          <span class="info-label">Room ID:</span>
+          <span id="room-id" class="info-value">default</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Welcome Modal -->
+  <div id="welcome-modal" class="modal">
+    <div class="modal-content">
+      <h2>🎨 Welcome to Collaborative Canvas</h2>
+      <p>Enter your name to start drawing with others in real-time!</p>
+      <input type="text" id="user-name-input" placeholder="Enter your name" maxlength="20" autofocus>
+      <input type="text" id="room-id-input" placeholder="Room ID (default: 'default')" value="default">
+      <button id="join-btn" class="primary-btn">Join Canvas</button>
+      <p class="modal-hint">💡 Share the room ID with others to collaborate!</p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <!-- Socket.io client - CDN version for independent client -->
+  <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+  <script src="config.js"></script>
+  <script src="canvas.js"></script>
+  <script src="websocket.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
